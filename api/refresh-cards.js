@@ -1,12 +1,12 @@
 const { createClient } = require('@supabase/supabase-js');
 
 const SECTIONS = [
-  { id: 'morning', count: 4, prompt: '4 morning briefing cards for a creative director and app founder who is a mom. Mix: AI news, creative tools, Estral app updates, mom life tips.' },
-  { id: 'news', count: 5, prompt: '5 top AI news stories from this week. Real headlines, what happened, why it matters.' },
-  { id: 'mom', count: 4, prompt: '4 AI tips specifically for busy professional moms.' },
-  { id: 'estral', count: 4, prompt: '4 app building ideas or milestones for building an AI news app called Xpand.' },
-  { id: 'creative', count: 5, prompt: '5 AI workflow hacks for a creative director.' },
-  { id: 'follows', count: 6, prompt: '6 Instagram accounts a creative AI-enthusiast mom should follow.' },
+  { id: 'morning', count: 10, prompt: 'Generate exactly 10 morning briefing cards for a creative director, app founder and mom. Cover: the most important AI news today, creative industry breakthroughs, productivity hacks, and mindset shifts. Make each card feel like insider knowledge she can\'t get anywhere else.' },
+  { id: 'news', count: 10, prompt: 'Generate exactly 10 of the most groundbreaking AI news stories right now. Only the biggest launches, funding rounds, model releases, and industry shifts that are changing everything. Be specific with company names, numbers, and why it matters.' },
+  { id: 'mom', count: 10, prompt: 'Generate exactly 10 of the best AI + motherhood hacks that actually work. Cover: AI tools that save time for busy moms, tech that helps with kids, workflow hacks for working moms, tools for meal planning, scheduling, and sanity. Be specific and practical.' },
+  { id: 'estral', count: 10, prompt: 'Generate exactly 10 insights for building a successful AI news app called Xpand. Cover: product features to build, growth strategies, monetization ideas, technical improvements, and competitor analysis. Be bold and specific.' },
+  { id: 'creative', count: 10, prompt: 'Generate exactly 10 groundbreaking AI workflow hacks for creative directors. Cover: the best AI tools for design, video, social, branding, and content. Include specific prompts, tools, and time-saving techniques that top creatives are using.' },
+  { id: 'follows', count: 10, prompt: 'Generate exactly 10 must-follow accounts for a creative director and AI-enthusiast mom. Cover: AI researchers, creative directors, mom entrepreneurs, tech founders, and culture makers who are changing the game. Include why each one is unmissable.' },
 ];
 
 async function generateCardsForSection(sectionId, prompt, count) {
