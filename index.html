@@ -105,8 +105,8 @@
         .select('*')
         .eq('section_id', sectionId)
         .order('created_at', { ascending: true });
-
       if (error) console.error('Fetch error:', error);
+      console.log('Fetched cards for', sectionId, data?.length);
       return data || [];
     }
 
@@ -117,7 +117,7 @@
       return 0;
     }
 
-    function SwipeCard({ card, image, sec, onSwipeOut, isTop, stackIndex }) {
+    function SwipeCard({ card, image, sec, onSwipeOut, onCardTap, isTop, stackIndex }) {
       const [x, setX] = useState(0);
       const [rotate, setRotate] = useState(0);
       const [gone, setGone] = useState(null);
@@ -146,11 +146,12 @@
           setIsDragging(false);
           swipeTimeout.current = setTimeout(() => onSwipeOut(dir), 320);
         } else {
+          if (Math.abs(dx) < 25 && onCardTap) onCardTap(card);
           setX(0);
           setRotate(0);
           setIsDragging(false);
         }
-      }, [isTop, onSwipeOut]);
+      }, [isTop, onSwipeOut, onCardTap, card]);
 
       const handleStart = useCallback((clientX) => {
         if (!isTop || gone) return;
@@ -323,6 +324,7 @@
       const [idx, setIdx] = useState(0);
       const [saved, setSaved] = useState([]);
       const [showSaved, setShowSaved] = useState(false);
+      const [expandedCard, setExpandedCard] = useState(null);
 
       useEffect(() => {
         setLoading(true);
@@ -465,12 +467,116 @@
                   image={images[absIdx] || images[0]}
                   sec={sec}
                   onSwipeOut={(dir) => onSwipeOut(dir, absIdx)}
+                  onCardTap={setExpandedCard}
                   isTop={stackIdx === 0}
                   stackIndex={stackIdx}
                 />
               );
             })}
           </div>
+          {expandedCard && (
+            <div
+              role="dialog"
+              aria-modal="true"
+              onClick={() => setExpandedCard(null)}
+              style={{
+                position: 'fixed',
+                inset: 0,
+                background: 'rgba(20, 18, 8, 0.92)',
+                zIndex: 9999,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                padding: 20,
+                boxSizing: 'border-box',
+              }}
+            >
+              <div
+                onClick={(e) => e.stopPropagation()}
+                style={{
+                  background: E.cream,
+                  borderRadius: 24,
+                  maxWidth: 400,
+                  width: '100%',
+                  maxHeight: '90dvh',
+                  overflow: 'auto',
+                  padding: 24,
+                  position: 'relative',
+                  boxShadow: '0 20px 60px rgba(0,0,0,0.5)',
+                }}
+              >
+                <button
+                  type="button"
+                  onClick={() => setExpandedCard(null)}
+                  aria-label="Close"
+                  style={{
+                    position: 'absolute',
+                    top: 16,
+                    right: 16,
+                    width: 36,
+                    height: 36,
+                    borderRadius: '50%',
+                    border: `2px solid ${E.clay}`,
+                    background: 'transparent',
+                    color: E.espresso,
+                    fontSize: 20,
+                    cursor: 'pointer',
+                    lineHeight: 1,
+                    padding: 0,
+                  }}
+                >
+                  ×
+                </button>
+                <h2
+                  style={{
+                    fontFamily: "'Cormorant Garamond', serif",
+                    fontSize: 24,
+                    fontWeight: 700,
+                    color: E.espresso,
+                    margin: '0 40px 16px 0',
+                    lineHeight: 1.3,
+                  }}
+                >
+                  {expandedCard.emoji ?? '✨'} {expandedCard.title ?? ''}
+                </h2>
+                <p
+                  style={{
+                    fontFamily: "'Outfit', sans-serif",
+                    fontSize: 15,
+                    color: '#3D2A1F',
+                    lineHeight: 1.65,
+                    margin: '0 0 24px',
+                  }}
+                >
+                  {expandedCard.body ?? ''}
+                </p>
+                <div
+                  style={{
+                    borderTop: `1px solid ${E.sand}`,
+                    paddingTop: 16,
+                  }}
+                >
+                  <span style={{ fontFamily: "'Outfit', sans-serif", fontSize: 11, color: E.clay, letterSpacing: '1.5px', textTransform: 'uppercase' }}>Sources</span>
+                  <a
+                    href={`https://www.google.com/search?q=${encodeURIComponent(expandedCard.title || '')}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    style={{
+                      display: 'block',
+                      fontFamily: "'Outfit', sans-serif",
+                      fontSize: 15,
+                      color: sec.color,
+                      fontWeight: 600,
+                      marginTop: 6,
+                      textDecoration: 'none',
+                    }}
+                  >
+                    Research this topic →
+                  </a>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       );
     }
