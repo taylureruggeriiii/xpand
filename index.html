@@ -169,6 +169,7 @@
         borderRadius: 20,
         overflow: 'hidden',
         background: '#FAF7F2',
+        touchAction: 'none',
       };
 
       return (
@@ -179,7 +180,7 @@
           onMouseUp={onEnd}
           onMouseLeave={onEnd}
           onTouchStart={onStart}
-          onTouchMove={onMove}
+          onTouchMove={(e) => { e.preventDefault(); onMove(e); }}
           onTouchEnd={onEnd}
         >
           <div style={{ position: 'relative', height: '52%', background: '#1a1a1a', overflow: 'hidden' }}>
