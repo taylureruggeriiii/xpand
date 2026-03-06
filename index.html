@@ -205,6 +205,7 @@
             overflow: 'hidden',
             cursor: isTop ? 'grab' : 'default',
             userSelect: 'none',
+            pointerEvents: isTop ? 'auto' : 'none',
             transform,
             transition,
             opacity: gone ? 0 : 1,
@@ -345,8 +346,7 @@
         setIdx((i) => i + 1);
       }, [cards]);
 
-      const visible = cards.slice(idx);
-      const remaining = cards.length - idx;
+      const visible = cards.slice(idx, idx + 3);
 
       if (loading)
         return (
