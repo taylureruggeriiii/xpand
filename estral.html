@@ -1,0 +1,664 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>estral — ai briefing</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,500;0,700;1,300;1,500&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet" />
+  <style>
+    * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+    html, body { height: 100%; margin: 0; overflow: hidden; font-family: 'Outfit', sans-serif; }
+    #root { height: 100%; display: flex; justify-content: center; }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+
+  <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+
+  <script type="text/babel" data-type="module">
+    const { useState, useEffect, useRef, useCallback } = React;
+
+    const SUPABASE_URL = 'https://jfcibnfmhtymunptnrtr.supabase.co';
+    const SUPABASE_KEY = 'sb_publishable_al8sn_BRNjmaXKfcLKHxQA_uDCUZh2K';
+
+    const E = {
+      cream: '#FAF7F2',
+      warm: '#F2EDE4',
+      sand: '#E8DDD0',
+      clay: '#C4A882',
+      rust: '#B5562B',
+      espresso: '#2C1810',
+      charcoal: '#1A1A1A',
+      sage: '#7A8C6E',
+      blush: '#E8C4B0',
+      gold: '#C9A84C',
+    };
+
+    const SECTIONS = [
+      { id: 'morning', label: '☀️ Brief', color: E.gold, accent: E.espresso, bg: '#1A1208' },
+      { id: 'news', label: '📡 News', color: E.clay, accent: E.espresso, bg: '#120E08' },
+      { id: 'mom', label: '🌿 Mama', color: E.sage, accent: E.espresso, bg: '#0A0F08' },
+      { id: 'estral', label: '⚡ Estral', color: E.rust, accent: E.cream, bg: '#140806' },
+      { id: 'creative', label: '🎨 Create', color: E.blush, accent: E.espresso, bg: '#140E0A' },
+      { id: 'follows', label: '📱 Follow', color: E.sand, accent: E.espresso, bg: '#100C08' },
+    ];
+
+    const IMAGES = {
+      morning: [
+        'https://images.unsplash.com/photo-1470252649378-9c29740c9fa8?w=600&q=80',
+        'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=600&q=80',
+        'https://images.unsplash.com/photo-1441974231531-c6227db76b6e?w=600&q=80',
+        'https://images.unsplash.com/photo-1495616811223-4d98c6e9c869?w=600&q=80',
+      ],
+      news: [
+        'https://images.unsplash.com/photo-1620712943543-bcc4688e7485?w=600&q=80',
+        'https://images.unsplash.com/photo-1677442135703-1787eea5ce01?w=600&q=80',
+        'https://images.unsplash.com/photo-1555255707-c07966088b7b?w=600&q=80',
+        'https://images.unsplash.com/photo-1635070041078-e363dbe005cb?w=600&q=80',
+        'https://images.unsplash.com/photo-1531297484001-80022131f5a1?w=600&q=80',
+      ],
+      mom: [
+        'https://images.unsplash.com/photo-1516627145497-ae6968895b74?w=600&q=80',
+        'https://images.unsplash.com/photo-1489710437720-ebb67ec84dd2?w=600&q=80',
+        'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=600&q=80',
+        'https://images.unsplash.com/photo-1498671546682-94a232c26d17?w=600&q=80',
+      ],
+      estral: [
+        'https://images.unsplash.com/photo-1558655146-9f40138edfeb?w=600&q=80',
+        'https://images.unsplash.com/photo-1551650975-87deedd944c3?w=600&q=80',
+        'https://images.unsplash.com/photo-1611162617213-7d7a39e9b1d7?w=600&q=80',
+        'https://images.unsplash.com/photo-1504868584819-f8e8b4b6d7e3?w=600&q=80',
+      ],
+      creative: [
+        'https://images.unsplash.com/photo-1561070791-2526d30994b5?w=600&q=80',
+        'https://images.unsplash.com/photo-1542744094-3a31f272c490?w=600&q=80',
+        'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=600&q=80',
+        'https://images.unsplash.com/photo-1626785774573-4b799315345d?w=600&q=80',
+        'https://images.unsplash.com/photo-1593642632559-0c6d3fc62b89?w=600&q=80',
+      ],
+      follows: [
+        'https://images.unsplash.com/photo-1611162616305-c69b3fa7fbe0?w=600&q=80',
+        'https://images.unsplash.com/photo-1585060544812-6b45742d762f?w=600&q=80',
+        'https://images.unsplash.com/photo-1611162618071-b39a2ec055fb?w=600&q=80',
+        'https://images.unsplash.com/photo-1432888622747-4eb9a8f2c293?w=600&q=80',
+      ],
+    };
+
+    const supabase = window.supabase && typeof window.supabase.createClient === 'function'
+      ? window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY)
+      : null;
+
+    async function fetchCards(sectionId) {
+      try {
+        if (supabase) {
+          const { data } = await supabase.from('daily_cards').select('*').eq('section_id', sectionId);
+          return Array.isArray(data) ? data : [];
+        }
+        const res = await fetch(
+          `${SUPABASE_URL}/rest/v1/daily_cards?section_id=eq.${encodeURIComponent(sectionId)}`,
+          {
+            headers: {
+              'apikey': SUPABASE_KEY,
+              'Authorization': `Bearer ${SUPABASE_KEY}`,
+              'Content-Type': 'application/json',
+            },
+          }
+        );
+        const data = await res.json();
+        return Array.isArray(data) ? data : [];
+      } catch (err) {
+        console.error(err);
+        return [];
+      }
+    }
+
+    function getClientX(e) {
+      if (typeof e.clientX === 'number') return e.clientX;
+      if (e.touches?.[0]) return e.touches[0].clientX;
+      if (e.changedTouches?.[0]) return e.changedTouches[0].clientX;
+      return 0;
+    }
+
+    function SwipeCard({ card, image, sec, onSwipeOut, isTop, stackIndex }) {
+      const [x, setX] = useState(0);
+      const [rotate, setRotate] = useState(0);
+      const [gone, setGone] = useState(null);
+      const [isDragging, setIsDragging] = useState(false);
+      const startClientX = useRef(0);
+      const currentX = useRef(0);
+      const swipeTimeout = useRef(null);
+
+      const handleMove = useCallback((e) => {
+        if (!isTop || gone) return;
+        const clientX = getClientX(e);
+        const dx = clientX - startClientX.current;
+        currentX.current = dx;
+        setX(dx);
+        setRotate(dx * 0.07);
+      }, [isTop, gone]);
+
+      const handleEnd = useCallback(() => {
+        if (!isTop) return;
+        const dx = currentX.current;
+        if (Math.abs(dx) > 85) {
+          const dir = dx > 0 ? 'right' : 'left';
+          setGone(dir);
+          setX(dir === 'right' ? 420 : -420);
+          setRotate(dir === 'right' ? 22 : -22);
+          setIsDragging(false);
+          swipeTimeout.current = setTimeout(() => onSwipeOut(dir), 320);
+        } else {
+          setX(0);
+          setRotate(0);
+          setIsDragging(false);
+        }
+      }, [isTop, onSwipeOut]);
+
+      const handleStart = useCallback((clientX) => {
+        if (!isTop || gone) return;
+        startClientX.current = clientX;
+        currentX.current = 0;
+        setIsDragging(true);
+      }, [isTop, gone]);
+
+      useEffect(() => {
+        if (!isDragging) return;
+        const onMouseMove = (e) => handleMove({ clientX: e.clientX });
+        const onMouseUp = () => handleEnd();
+        const onTouchMove = (e) => {
+          handleMove({ touches: e.touches });
+          if (e.cancelable) e.preventDefault();
+        };
+        const onTouchEnd = () => handleEnd();
+        window.addEventListener('mousemove', onMouseMove);
+        window.addEventListener('mouseup', onMouseUp);
+        window.addEventListener('touchmove', onTouchMove, { passive: false });
+        window.addEventListener('touchend', onTouchEnd);
+        return () => {
+          window.removeEventListener('mousemove', onMouseMove);
+          window.removeEventListener('mouseup', onMouseUp);
+          window.removeEventListener('touchmove', onTouchMove);
+          window.removeEventListener('touchend', onTouchEnd);
+          if (swipeTimeout.current) clearTimeout(swipeTimeout.current);
+        };
+      }, [isDragging, handleMove, handleEnd]);
+
+      const scale = isTop ? 1 : stackIndex === 1 ? 0.95 : 0.91;
+      const translateY = isTop ? 0 : stackIndex === 1 ? 14 : 26;
+      const tag = card.tag ?? 'Card';
+      const emoji = card.emoji ?? '✨';
+      const title = card.title ?? '';
+      const body = card.body ?? '';
+
+      const transform = `translateX(${x}px) rotate(${rotate}deg) scale(${scale}) translateY(${translateY}px)`;
+      const transition = isDragging ? 'none' : 'transform 0.32s cubic-bezier(0.25, 0.46, 0.45, 0.94), opacity 0.32s ease';
+
+      return (
+        <div
+          role="button"
+          tabIndex={0}
+          onMouseDown={(e) => isTop && handleStart(e.clientX)}
+          onTouchStart={(e) => isTop && handleStart(getClientX(e))}
+          style={{
+            position: 'absolute',
+            inset: 0,
+            borderRadius: 24,
+            overflow: 'hidden',
+            cursor: isTop ? 'grab' : 'default',
+            userSelect: 'none',
+            transform,
+            transition,
+            opacity: gone ? 0 : 1,
+            zIndex: isTop ? 10 : 10 - stackIndex,
+            boxShadow: isTop ? '0 20px 60px rgba(0,0,0,0.6), 0 0 0 1px rgba(255,255,255,0.04)' : '0 6px 24px rgba(0,0,0,0.4)',
+            willChange: 'transform',
+            display: 'flex',
+            flexDirection: 'column',
+            background: E.cream,
+          }}
+        >
+          <div
+            style={{
+              flex: '0 0 52%',
+              backgroundImage: `url(${image})`,
+              backgroundSize: 'cover',
+              backgroundPosition: 'center top',
+              position: 'relative',
+            }}
+          >
+            <div
+              style={{
+                position: 'absolute',
+                bottom: 14,
+                left: 18,
+                background: sec.color,
+                borderRadius: 50,
+                padding: '5px 14px',
+                fontFamily: "'Outfit', sans-serif",
+                fontSize: 10,
+                fontWeight: 600,
+                color: sec.accent,
+                letterSpacing: '1.5px',
+                textTransform: 'uppercase',
+              }}
+            >
+              {tag}
+            </div>
+          </div>
+          <div
+            style={{
+              flex: 1,
+              background: E.cream,
+              padding: '18px 22px 20px',
+              display: 'flex',
+              flexDirection: 'column',
+              justifyContent: 'space-between',
+              borderTop: `3px solid ${sec.color}`,
+            }}
+          >
+            <div>
+              <div style={{ fontSize: 26, lineHeight: 1, marginBottom: 10 }}>{emoji}</div>
+              <h2
+                style={{
+                  fontFamily: "'Cormorant Garamond', serif",
+                  fontSize: 'clamp(19px, 4.8vw, 24px)',
+                  fontWeight: 700,
+                  color: E.espresso,
+                  margin: '0 0 10px',
+                  lineHeight: 1.25,
+                }}
+              >
+                {title}
+              </h2>
+              <p
+                style={{
+                  fontFamily: "'Outfit', sans-serif",
+                  fontSize: 13,
+                  fontWeight: 400,
+                  color: '#3D2A1F',
+                  lineHeight: 1.65,
+                  margin: 0,
+                }}
+              >
+                {body}
+              </p>
+            </div>
+            {isTop && (
+              <div
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  marginTop: 14,
+                  paddingTop: 12,
+                  borderTop: `1px solid ${E.sand}`,
+                }}
+              >
+                <span style={{ fontFamily: "'Outfit', sans-serif", fontSize: 10, color: E.clay, letterSpacing: '1.5px', textTransform: 'uppercase' }}>← skip</span>
+                <div
+                  style={{
+                    width: 32,
+                    height: 32,
+                    borderRadius: '50%',
+                    background: sec.color,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    fontSize: 14,
+                    color: sec.accent,
+                  }}
+                >
+                  →
+                </div>
+                <span style={{ fontFamily: "'Outfit', sans-serif", fontSize: 10, color: E.clay, letterSpacing: '1.5px', textTransform: 'uppercase' }}>save →</span>
+              </div>
+            )}
+          </div>
+        </div>
+      );
+    }
+
+    function Deck({ sectionId, sec }) {
+      const [cards, setCards] = useState([]);
+      const [images, setImages] = useState([]);
+      const [loading, setLoading] = useState(true);
+      const [idx, setIdx] = useState(0);
+      const [saved, setSaved] = useState([]);
+      const [showSaved, setShowSaved] = useState(false);
+
+      useEffect(() => {
+        setLoading(true);
+        setIdx(0);
+        setSaved([]);
+        setShowSaved(false);
+        fetchCards(sectionId).then((data) => {
+          const safeData = Array.isArray(data) ? data : [];
+          const bank = IMAGES[sectionId] || IMAGES.news || [];
+          setCards(safeData);
+          setImages(safeData.map((_, i) => bank[i % bank.length] || bank[0] || ''));
+          setLoading(false);
+        });
+      }, [sectionId]);
+
+      const onSwipeOut = useCallback((dir, cardIdx) => {
+        if (dir === 'right') setSaved((s) => [...s, cards[cardIdx]]);
+        setIdx((i) => i + 1);
+      }, [cards]);
+
+      const visible = cards.slice(idx, idx + 3);
+
+      if (loading)
+        return (
+          <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column', gap: 14 }}>
+            <div
+              style={{
+                width: 40,
+                height: 40,
+                border: `3px solid ${E.sand}44`,
+                borderTop: `3px solid ${sec.color}`,
+                borderRadius: '50%',
+                animation: 'spin 0.8s linear infinite',
+              }}
+            />
+            <p style={{ fontFamily: "'Outfit', sans-serif", color: E.clay, fontSize: 12, letterSpacing: 2, margin: 0 }}>LOADING INTEL...</p>
+          </div>
+        );
+
+      if (cards.length === 0)
+        return (
+          <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 16, padding: 24 }}>
+            <div style={{ fontSize: 44 }}>📭</div>
+            <h3 style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 26, color: E.cream, margin: 0, textAlign: 'center' }}>No cards yet</h3>
+            <p style={{ fontFamily: "'Outfit', sans-serif", fontSize: 13, color: E.clay, margin: 0 }}>Add cards in Supabase for this section.</p>
+          </div>
+        );
+
+      if (idx >= cards.length)
+        return (
+          <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 16, padding: 24 }}>
+            <div style={{ fontSize: 44 }}>✨</div>
+            <h3 style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 26, color: E.cream, margin: 0, textAlign: 'center' }}>All caught up!</h3>
+            {saved.length > 0 && (
+              <p style={{ fontFamily: "'Outfit', sans-serif", fontSize: 13, color: E.clay, margin: 0 }}>
+                {saved.length} card{saved.length > 1 ? 's' : ''} saved ♥
+              </p>
+            )}
+            {saved.length > 0 && (
+              <button
+                type="button"
+                onClick={() => setShowSaved(!showSaved)}
+                style={{
+                  background: sec.color,
+                  border: 'none',
+                  borderRadius: 50,
+                  padding: '11px 26px',
+                  color: sec.accent,
+                  fontFamily: "'Outfit', sans-serif",
+                  fontWeight: 600,
+                  fontSize: 13,
+                  cursor: 'pointer',
+                }}
+              >
+                {showSaved ? 'Hide Saved' : 'View Saved ♥'}
+              </button>
+            )}
+            {showSaved && (
+              <div style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: 10, maxHeight: 260, overflowY: 'auto' }}>
+                {saved.map((c, i) => (
+                  <div
+                    key={i}
+                    style={{
+                      background: E.cream,
+                      borderRadius: 14,
+                      padding: 14,
+                      borderLeft: `3px solid ${sec.color}`,
+                    }}
+                  >
+                    <div style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 15, color: E.espresso, marginBottom: 5 }}>{c.emoji ?? '✨'} {c.title ?? ''}</div>
+                    <div style={{ fontFamily: "'Outfit', sans-serif", fontSize: 12, color: '#3D2A1F', lineHeight: 1.6 }}>{c.body ?? ''}</div>
+                  </div>
+                ))}
+              </div>
+            )}
+            <button
+              type="button"
+              onClick={() => { setIdx(0); setSaved([]); setShowSaved(false); }}
+              style={{
+                background: 'transparent',
+                border: `1px solid ${E.clay}55`,
+                borderRadius: 50,
+                padding: '9px 22px',
+                color: E.clay,
+                fontFamily: "'Outfit', sans-serif",
+                fontSize: 12,
+                cursor: 'pointer',
+              }}
+            >
+              ↺ Replay
+            </button>
+          </div>
+        );
+
+      return (
+        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0 }}>
+          <div style={{ display: 'flex', gap: 4, marginBottom: 12, alignItems: 'center' }}>
+            {cards.map((_, i) => (
+              <div
+                key={i}
+                style={{
+                  height: 2.5,
+                  borderRadius: 2,
+                  flex: 1,
+                  background: i < idx ? sec.color : i === idx ? `${E.clay}99` : `${E.clay}28`,
+                  transition: 'background 0.3s ease',
+                }}
+              />
+            ))}
+            <span style={{ fontFamily: "'Outfit', sans-serif", fontSize: 11, color: E.clay, marginLeft: 8, letterSpacing: 0.5, whiteSpace: 'nowrap' }}>{cards.length - idx} left</span>
+          </div>
+          <div style={{ position: 'relative', flex: 1 }}>
+            {[...visible].reverse().map((card, revI) => {
+              const stackIdx = visible.length - 1 - revI;
+              const absIdx = idx + stackIdx;
+              return (
+                <SwipeCard
+                  key={card.id ?? absIdx}
+                  card={card}
+                  image={images[absIdx] || images[0]}
+                  sec={sec}
+                  onSwipeOut={(dir) => onSwipeOut(dir, absIdx)}
+                  isTop={stackIdx === 0}
+                  stackIndex={stackIdx}
+                />
+              );
+            })}
+          </div>
+        </div>
+      );
+    }
+
+    function EstralApp() {
+      const [active, setActive] = useState(0);
+      const navRef = useRef(null);
+      const touchStartX = useRef(null);
+      const sec = SECTIONS[active];
+
+      useEffect(() => {
+        if (!navRef.current) return;
+        const btns = navRef.current.querySelectorAll('button');
+        btns[active]?.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
+      }, [active]);
+
+      const onTouchStart = (e) => { touchStartX.current = e.touches[0].clientX; };
+      const onTouchEnd = (e) => {
+        if (touchStartX.current === null) return;
+        const dx = e.changedTouches[0].clientX - touchStartX.current;
+        if (Math.abs(dx) > 70) {
+          if (dx < 0 && active < SECTIONS.length - 1) setActive((i) => i + 1);
+          if (dx > 0 && active > 0) setActive((i) => i - 1);
+        }
+        touchStartX.current = null;
+      };
+
+      return (
+        <div
+          onTouchStart={onTouchStart}
+          onTouchEnd={onTouchEnd}
+          style={{
+            width: '100%',
+            height: '100vh',
+            maxWidth: 430,
+            margin: '0 auto',
+            background: sec.bg,
+            display: 'flex',
+            flexDirection: 'column',
+            transition: 'background 0.5s ease',
+            position: 'relative',
+            overflow: 'hidden',
+            fontFamily: "'Outfit', sans-serif",
+          }}
+        >
+          <style>{`
+            @keyframes spin { to { transform: rotate(360deg); } }
+            ::-webkit-scrollbar { display: none; }
+          `}</style>
+          <div
+            style={{
+              position: 'absolute',
+              top: -60,
+              left: '50%',
+              transform: 'translateX(-50%)',
+              width: 260,
+              height: 220,
+              background: `radial-gradient(circle, ${sec.color}22 0%, transparent 70%)`,
+              pointerEvents: 'none',
+              zIndex: 0,
+              transition: 'all 0.5s ease',
+            }}
+          />
+          <div
+            style={{
+              padding: '20px 22px 8px',
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              position: 'relative',
+              zIndex: 10,
+              flexShrink: 0,
+            }}
+          >
+            <div>
+              <div style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 28, fontWeight: 700, color: E.cream, letterSpacing: '-0.5px', lineHeight: 1 }}>estral</div>
+              <div style={{ fontSize: 9, color: sec.color, letterSpacing: '3.5px', fontWeight: 500, marginTop: 3, textTransform: 'uppercase' }}>ai briefing</div>
+            </div>
+            <div
+              style={{
+                background: `${E.cream}12`,
+                border: `1px solid ${E.clay}30`,
+                borderRadius: 50,
+                padding: '6px 14px',
+                fontSize: 10,
+                color: E.clay,
+                letterSpacing: '1.5px',
+              }}
+            >
+              {new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric' }).toUpperCase()}
+            </div>
+          </div>
+          <div
+            ref={navRef}
+            style={{
+              display: 'flex',
+              gap: 7,
+              padding: '6px 22px 12px',
+              overflowX: 'auto',
+              scrollbarWidth: 'none',
+              msOverflowStyle: 'none',
+              position: 'relative',
+              zIndex: 10,
+              flexShrink: 0,
+            }}
+          >
+            {SECTIONS.map((s, i) => (
+              <button
+                key={s.id}
+                type="button"
+                onClick={() => setActive(i)}
+                style={{
+                  flexShrink: 0,
+                  background: active === i ? s.color : `${E.cream}0D`,
+                  border: active === i ? 'none' : `1px solid ${E.clay}25`,
+                  borderRadius: 50,
+                  padding: '8px 16px',
+                  color: active === i ? s.accent : E.clay,
+                  fontSize: 12,
+                  fontWeight: active === i ? 600 : 400,
+                  cursor: 'pointer',
+                  transition: 'all 0.28s cubic-bezier(0.34, 1.56, 0.64, 1)',
+                  boxShadow: active === i ? `0 4px 18px ${s.color}55` : 'none',
+                  transform: active === i ? 'scale(1.06)' : 'scale(1)',
+                  letterSpacing: '0.2px',
+                }}
+              >
+                {s.label}
+              </button>
+            ))}
+          </div>
+          <div
+            style={{
+              flex: 1,
+              padding: '0 18px',
+              display: 'flex',
+              flexDirection: 'column',
+              minHeight: 0,
+              position: 'relative',
+              zIndex: 5,
+            }}
+          >
+            <Deck key={sec.id} sectionId={sec.id} sec={sec} />
+          </div>
+          <div
+            style={{
+              display: 'flex',
+              justifyContent: 'center',
+              alignItems: 'center',
+              gap: 7,
+              padding: '10px 0 20px',
+              position: 'relative',
+              zIndex: 10,
+              flexShrink: 0,
+            }}
+          >
+            {SECTIONS.map((s, i) => (
+              <button
+                key={s.id}
+                type="button"
+                onClick={() => setActive(i)}
+                style={{
+                  width: active === i ? 24 : 7,
+                  height: 7,
+                  borderRadius: 4,
+                  background: active === i ? s.color : `${E.clay}40`,
+                  border: 'none',
+                  cursor: 'pointer',
+                  padding: 0,
+                  transition: 'all 0.32s cubic-bezier(0.34, 1.56, 0.64, 1)',
+                }}
+              />
+            ))}
+          </div>
+        </div>
+      );
+    }
+
+    const root = ReactDOM.createRoot(document.getElementById('root'));
+    root.render(<EstralApp />);
+  </script>
+</body>
+</html>
