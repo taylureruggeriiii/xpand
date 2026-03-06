@@ -1,0 +1,6 @@
+{
+  "crons": [{
+    "path": "/api/refresh-cards",
+    "schedule": "0 7 * * *"
+  }]
+}
