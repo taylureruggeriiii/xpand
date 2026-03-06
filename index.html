@@ -345,7 +345,8 @@
         setIdx((i) => i + 1);
       }, [cards]);
 
-      const visible = cards.slice(idx, idx + 3);
+      const visible = cards.slice(idx);
+      const remaining = cards.length - idx;
 
       if (loading)
         return (
