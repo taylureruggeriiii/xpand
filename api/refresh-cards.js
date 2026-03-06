@@ -7,6 +7,7 @@ const SECTIONS = [
   { id: 'estral', count: 10, prompt: 'Generate exactly 10 insights for building a successful AI news app called Xpand. Cover: product features to build, growth strategies, monetization ideas, technical improvements, and competitor analysis. Be bold and specific.' },
   { id: 'creative', count: 10, prompt: 'Generate exactly 10 groundbreaking AI workflow hacks for creative directors. Cover: the best AI tools for design, video, social, branding, and content. Include specific prompts, tools, and time-saving techniques that top creatives are using.' },
   { id: 'follows', count: 10, prompt: 'Generate exactly 10 must-follow accounts for a creative director and AI-enthusiast mom. Cover: AI researchers, creative directors, mom entrepreneurs, tech founders, and culture makers who are changing the game. Include why each one is unmissable.' },
+  { id: 'body', count: 10, prompt: 'Generate exactly 10 women\'s health cards covering the most up-to-date research and news. Topics: PCOS (including the proposed name change to HIRS), endometriosis, perimenopause, hormonal health, fertility, cycle tracking tech, women\'s health apps, gut health, sleep, and nutrition research. Write like a knowledgeable gen-z older sister - casual, direct, no fluff, but scientifically accurate. Include specific study findings, new terminology, and practical takeaways she can use today.' },
 ];
 
 async function generateCardsForSection(sectionId, prompt, count) {
