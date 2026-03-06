@@ -462,9 +462,9 @@
               const absIdx = idx + stackIdx;
               return (
                 <SwipeCard
-                  key={card.id ?? absIdx}
+                  key={`stack-${idx}-${absIdx}`}
                   card={card}
-                  image={images[absIdx] || images[0]}
+                  image={images[absIdx] ?? images[0] ?? ''}
                   sec={sec}
                   onSwipeOut={(dir) => onSwipeOut(dir, absIdx)}
                   onCardTap={setExpandedCard}
