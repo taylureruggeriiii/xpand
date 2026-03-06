@@ -134,11 +134,13 @@
 
       function onStart(e) {
         if (!isTop) return;
+        e.stopPropagation();
         setStartX(getX(e));
       }
 
       function onMove(e) {
         if (!isTop || startX === null) return;
+        e.stopPropagation();
         setDeltaX(getX(e) - startX);
       }
 
