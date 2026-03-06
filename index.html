@@ -118,201 +118,84 @@
     }
 
     function SwipeCard({ card, image, sec, onSwipeOut, onCardTap, isTop, stackIndex }) {
-      const [x, setX] = useState(0);
-      const [rotate, setRotate] = useState(0);
-      const [gone, setGone] = useState(null);
-      const [isDragging, setIsDragging] = useState(false);
-      const startClientX = useRef(0);
-      const currentX = useRef(0);
-      const swipeTimeout = useRef(null);
+      const [startX, setStartX] = React.useState(null);
+      const [deltaX, setDeltaX] = React.useState(0);
+      const [gone, setGone] = React.useState(false);
 
-      const handleMove = useCallback((e) => {
-        if (!isTop || gone) return;
-        const clientX = getClientX(e);
-        const dx = clientX - startClientX.current;
-        currentX.current = dx;
-        setX(dx);
-        setRotate(dx * 0.07);
-      }, [isTop, gone]);
+      const threshold = 80;
+      const rotation = deltaX * 0.1;
+      const opacity = isTop ? 1 : 0.95 - stackIndex * 0.05;
+      const scale = 1 - stackIndex * 0.04;
+      const translateY = stackIndex * 8;
 
-      const handleEnd = useCallback(() => {
+      function getX(e) {
+        return e.touches ? e.touches[0].clientX : e.clientX;
+      }
+
+      function onStart(e) {
         if (!isTop) return;
-        const dx = currentX.current;
-        if (Math.abs(dx) > 85) {
-          const dir = dx > 0 ? 'right' : 'left';
-          setGone(dir);
-          setX(dir === 'right' ? 420 : -420);
-          setRotate(dir === 'right' ? 22 : -22);
-          setIsDragging(false);
-          swipeTimeout.current = setTimeout(() => onSwipeOut(dir), 320);
+        setStartX(getX(e));
+      }
+
+      function onMove(e) {
+        if (!isTop || startX === null) return;
+        setDeltaX(getX(e) - startX);
+      }
+
+      function onEnd() {
+        if (!isTop || startX === null) return;
+        if (Math.abs(deltaX) > threshold) {
+          const dir = deltaX > 0 ? 'right' : 'left';
+          setGone(true);
+          setTimeout(() => onSwipeOut(dir), 300);
         } else {
-          if (Math.abs(dx) < 25 && onCardTap) onCardTap(card);
-          setX(0);
-          setRotate(0);
-          setIsDragging(false);
+          if (Math.abs(deltaX) < 5) onCardTap(card);
+          setDeltaX(0);
+          setStartX(null);
         }
-      }, [isTop, onSwipeOut, onCardTap, card]);
+      }
 
-      const handleStart = useCallback((clientX) => {
-        if (!isTop || gone) return;
-        startClientX.current = clientX;
-        currentX.current = 0;
-        setIsDragging(true);
-      }, [isTop, gone]);
-
-      useEffect(() => {
-        if (!isDragging) return;
-        const onMouseMove = (e) => handleMove({ clientX: e.clientX });
-        const onMouseUp = () => handleEnd();
-        const onTouchMove = (e) => {
-          handleMove({ touches: e.touches });
-          if (e.cancelable) e.preventDefault();
-        };
-        const onTouchEnd = () => handleEnd();
-        window.addEventListener('mousemove', onMouseMove);
-        window.addEventListener('mouseup', onMouseUp);
-        window.addEventListener('touchmove', onTouchMove, { passive: false });
-        window.addEventListener('touchend', onTouchEnd);
-        return () => {
-          window.removeEventListener('mousemove', onMouseMove);
-          window.removeEventListener('mouseup', onMouseUp);
-          window.removeEventListener('touchmove', onTouchMove);
-          window.removeEventListener('touchend', onTouchEnd);
-          if (swipeTimeout.current) clearTimeout(swipeTimeout.current);
-        };
-      }, [isDragging, handleMove, handleEnd]);
-
-      const scale = isTop ? 1 : stackIndex === 1 ? 0.95 : 0.91;
-      const translateY = isTop ? 0 : stackIndex === 1 ? 14 : 26;
-      const tag = card.tag ?? 'Card';
-      const emoji = card.emoji ?? '✨';
-      const title = card.title ?? '';
-      const body = card.body ?? '';
-
-      const transform = `translateX(${x}px) rotate(${rotate}deg) scale(${scale}) translateY(${translateY}px)`;
-      const transition = isDragging ? 'none' : 'transform 0.32s cubic-bezier(0.25, 0.46, 0.45, 0.94), opacity 0.32s ease';
+      const style = {
+        position: 'absolute',
+        top: 0, left: 0, right: 0, bottom: 0,
+        transform: gone
+          ? `translateX(${deltaX > 0 ? 150 : -150}%) rotate(${rotation}deg)`
+          : `translateX(${deltaX}px) rotate(${rotation}deg) scale(${scale}) translateY(${translateY}px)`,
+        transition: (startX !== null && !gone) ? 'none' : 'transform 0.3s ease',
+        opacity: gone ? 0 : opacity,
+        cursor: isTop ? 'grab' : 'default',
+        pointerEvents: isTop ? 'auto' : 'none',
+        userSelect: 'none',
+        borderRadius: 20,
+        overflow: 'hidden',
+        background: '#FAF7F2',
+      };
 
       return (
         <div
-          role="button"
-          tabIndex={0}
-          onMouseDown={(e) => isTop && handleStart(e.clientX)}
-          onTouchStart={(e) => isTop && handleStart(getClientX(e))}
-          style={{
-            position: 'absolute',
-            inset: 0,
-            borderRadius: 24,
-            overflow: 'hidden',
-            cursor: isTop ? 'grab' : 'default',
-            userSelect: 'none',
-            pointerEvents: isTop ? 'auto' : 'none',
-            transform,
-            transition,
-            opacity: gone ? 0 : 1,
-            zIndex: isTop ? 10 : 10 - stackIndex,
-            boxShadow: isTop ? '0 20px 60px rgba(0,0,0,0.6), 0 0 0 1px rgba(255,255,255,0.04)' : '0 6px 24px rgba(0,0,0,0.4)',
-            willChange: 'transform',
-            display: 'flex',
-            flexDirection: 'column',
-            background: E.cream,
-          }}
+          style={style}
+          onMouseDown={onStart}
+          onMouseMove={onMove}
+          onMouseUp={onEnd}
+          onMouseLeave={onEnd}
+          onTouchStart={onStart}
+          onTouchMove={onMove}
+          onTouchEnd={onEnd}
         >
-          <div
-            style={{
-              flex: '0 0 52%',
-              backgroundImage: `url(${image})`,
-              backgroundSize: 'cover',
-              backgroundPosition: 'center top',
-              position: 'relative',
-            }}
-          >
-            <div
-              style={{
-                position: 'absolute',
-                bottom: 14,
-                left: 18,
-                background: sec.color,
-                borderRadius: 50,
-                padding: '5px 14px',
-                fontFamily: "'Outfit', sans-serif",
-                fontSize: 10,
-                fontWeight: 600,
-                color: sec.accent,
-                letterSpacing: '1.5px',
-                textTransform: 'uppercase',
-              }}
-            >
-              {tag}
-            </div>
-          </div>
-          <div
-            style={{
-              flex: 1,
-              background: E.cream,
-              padding: '18px 22px 20px',
-              display: 'flex',
-              flexDirection: 'column',
-              justifyContent: 'space-between',
-              borderTop: `3px solid ${sec.color}`,
-            }}
-          >
-            <div>
-              <div style={{ fontSize: 26, lineHeight: 1, marginBottom: 10 }}>{emoji}</div>
-              <h2
-                style={{
-                  fontFamily: "'Cormorant Garamond', serif",
-                  fontSize: 'clamp(19px, 4.8vw, 24px)',
-                  fontWeight: 700,
-                  color: E.espresso,
-                  margin: '0 0 10px',
-                  lineHeight: 1.25,
-                }}
-              >
-                {title}
-              </h2>
-              <p
-                style={{
-                  fontFamily: "'Outfit', sans-serif",
-                  fontSize: 13,
-                  fontWeight: 400,
-                  color: '#3D2A1F',
-                  lineHeight: 1.65,
-                  margin: 0,
-                }}
-              >
-                {body}
-              </p>
-            </div>
-            {isTop && (
-              <div
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'space-between',
-                  marginTop: 14,
-                  paddingTop: 12,
-                  borderTop: `1px solid ${E.sand}`,
-                }}
-              >
-                <span style={{ fontFamily: "'Outfit', sans-serif", fontSize: 10, color: E.clay, letterSpacing: '1.5px', textTransform: 'uppercase' }}>← skip</span>
-                <div
-                  style={{
-                    width: 32,
-                    height: 32,
-                    borderRadius: '50%',
-                    background: sec.color,
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    fontSize: 14,
-                    color: sec.accent,
-                  }}
-                >
-                  →
-                </div>
-                <span style={{ fontFamily: "'Outfit', sans-serif", fontSize: 10, color: E.clay, letterSpacing: '1.5px', textTransform: 'uppercase' }}>save →</span>
+          <div style={{ position: 'relative', height: '52%', background: '#1a1a1a', overflow: 'hidden' }}>
+            {image && <img src={image} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />}
+            {card.tag && (
+              <div style={{ position: 'absolute', bottom: 12, left: 12, background: sec.color, color: '#fff', fontSize: 10, fontWeight: 700, letterSpacing: 1.5, padding: '4px 10px', borderRadius: 20, fontFamily: 'Outfit, sans-serif', textTransform: 'uppercase' }}>
+                {card.tag}
               </div>
             )}
+            {deltaX > 40 && <div style={{ position: 'absolute', top: 20, left: 20, border: '3px solid #4CAF50', borderRadius: 8, padding: '4px 12px', color: '#4CAF50', fontWeight: 800, fontSize: 18, transform: 'rotate(-15deg)' }}>SAVE</div>}
+            {deltaX < -40 && <div style={{ position: 'absolute', top: 20, right: 20, border: '3px solid #f44336', borderRadius: 8, padding: '4px 12px', color: '#f44336', fontWeight: 800, fontSize: 18, transform: 'rotate(15deg)' }}>SKIP</div>}
+          </div>
+          <div style={{ padding: '16px 18px', height: '48%', boxSizing: 'border-box', overflow: 'hidden' }}>
+            <div style={{ fontSize: 22, marginBottom: 4 }}>{card.emoji}</div>
+            <div style={{ fontFamily: 'Cormorant Garamond, serif', fontSize: 20, fontWeight: 700, color: '#2C1810', marginBottom: 8, lineHeight: 1.2 }}>{card.title}</div>
+            <div style={{ fontFamily: 'Outfit, sans-serif', fontSize: 13, color: '#5a4a3a', lineHeight: 1.5 }}>{card.body}</div>
           </div>
         </div>
       );
